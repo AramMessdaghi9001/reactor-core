@@ -16,6 +16,8 @@
 
 package reactor.core.publisher;
 
+import java.io.File;
+import java.lang.reflect.ParameterizedType;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -44,6 +46,7 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.stream.Collector;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -8770,6 +8773,15 @@ public abstract class Flux<T> implements CorePublisher<T> {
 				}
 			}
 
+			if (publisher instanceof Scannable) {
+				Scannable scannable = (Scannable) publisher;
+				boolean internal = scannable.scanOrDefault(Scannable.Attr.INTERNAL, false);
+				if (!internal) {
+					subscriber = new FluxSource.FluxSourceRestoringThreadLocalsSubscriber<>(subscriber);
+				}
+			} else {
+				subscriber = new FluxSource.FluxSourceRestoringThreadLocalsSubscriber<>(subscriber);
+			}
 			publisher.subscribe(subscriber);
 		}
 		catch (Throwable e) {
